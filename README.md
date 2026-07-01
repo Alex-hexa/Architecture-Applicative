@@ -8,3 +8,6 @@ Catalogue d'événements
 ## Trie :
 - Date de publication
 - Prix (croissant/décroissant)
+
+## Architecture :
+![Architecture](docs/image/LeMauvaisCoin_Architecture_N-tiers.png)

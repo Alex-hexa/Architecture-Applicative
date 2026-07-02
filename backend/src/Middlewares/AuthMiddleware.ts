@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
     user?: string | jwt.JwtPayload;
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const AuthMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

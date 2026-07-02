@@ -20,5 +20,6 @@ const saleController = new SaleController(saleService);
 app.post('/api/auth/register', (req, res) => authController.register(req, res));
 app.post('/api/auth/login', (req, res) => authController.login(req, res));
 app.get('/api/sales', AuthMiddleware, (req, res) => saleController.getAll(req, res));
+app.post('/api/sales', AuthMiddleware, (req, res) => saleController.create(req, res));
 
 app.listen(3000, () => console.log('Serveur démarré sur le port 3000'));

@@ -43,4 +43,17 @@ export class SaleRepository {
 
         return data as Sale[];
     }
+
+    async create(sale: Omit<Sale, 'id'>): Promise<Sale> {
+        const { data, error } = await supabase
+            .from('sale')
+            .insert([sale])
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(`Erreur lors de la création de l'annonce : ${error.message}`);
+        }
+        return data as Sale;
+    }
 }

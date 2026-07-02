@@ -6,4 +6,5 @@ export interface Sale {
     quantity: number;
     categorie: string;
     user_id: string;
+    created_at: Date;
 }

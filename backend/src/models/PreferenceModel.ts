@@ -1,6 +1,7 @@
 export interface Preference {
     id: string;
-    price?: number | null;
-    categorie?: string | null;
     user_id: string;
+    category: string;
+    score: number;
+    last_interaction: Date;
 }

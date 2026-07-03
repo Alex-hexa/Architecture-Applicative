@@ -4,14 +4,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Il manque SUPABASE_URL ou SUPABASE_KEY dans le fichier .env");
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!);
 
 export class UserRepository {
     async findByEmail(email: string): Promise<User | null> {

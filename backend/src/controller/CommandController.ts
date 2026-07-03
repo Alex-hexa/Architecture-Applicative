@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
+import { getUserId, type AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { CommandService } from '../service/CommandService.js';
 import type { CommandFilters } from '../repository/CommandRepository.js';
 import { z } from 'zod';
@@ -11,13 +11,6 @@ const createCommandSchema = z.object({
 export class CommandController {
     constructor(private readonly commandService: CommandService) {}
 
-    private getUserId(req: AuthRequest): string {
-        if (!req.user || !req.user.userId) {
-            throw new Error("Utilisateur non authentifié.");
-        }
-        return req.user.userId;
-    }
-
     async create(req: AuthRequest, res: Response): Promise<void> {
         if (!req.body || Object.keys(req.body).length === 0) {
             res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
@@ -25,7 +18,7 @@ export class CommandController {
         }
 
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
             const validatedData = createCommandSchema.parse(req.body);
             const newCommand = await this.commandService.createCommand(userId, validatedData.sale_id);
             res.status(201).json(newCommand);
@@ -44,7 +37,7 @@ export class CommandController {
 
     async getAll(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
 
             const filters: CommandFilters = {};
             if (req.query.status) filters.status = req.query.status as string;

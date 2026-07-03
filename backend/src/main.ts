@@ -9,6 +9,9 @@ import { AuthMiddleware } from './middlewares/AuthMiddleware.js';
 import { CommandRepository } from './repository/CommandRepository.js';
 import { CommandService } from './service/CommandService.js';
 import { CommandController } from './controller/CommandController.js';
+import { MockUserRepository } from './repository/MockUserRepository.js';
+import { MockSaleRepository } from './repository/MockSaleRepository.js';
+import { MockCommandRepository } from './repository/MockCommandRepository.js';
 
 const app = express();
 app.use(express.json());
@@ -22,6 +25,17 @@ const saleController = new SaleController(saleService);
 const commandRepository = new CommandRepository();
 const commandService = new CommandService(commandRepository);
 const commandController = new CommandController(commandService);
+
+//Mock
+// const userRepository = new MockUserRepository();
+// const saleRepository = new MockSaleRepository();
+// const commandRepository = new MockCommandRepository();
+// const authService = new AuthService(userRepository);
+// const saleService = new SaleService(saleRepository);
+// const commandService = new CommandService(commandRepository);
+// const authController = new AuthController(authService);
+// const saleController = new SaleController(saleService);
+// const commandController = new CommandController(commandService);
 
 app.post('/api/auth/register', (req, res) => authController.register(req, res));
 app.post('/api/auth/login', (req, res) => authController.login(req, res));

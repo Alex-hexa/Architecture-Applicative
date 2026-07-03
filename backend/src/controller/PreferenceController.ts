@@ -1,19 +1,13 @@
 import type { Response } from 'express';
-import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
+import { getUserId, type AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { PreferenceService } from '../service/PreferenceService.js';
 
 export class PreferenceController {
     constructor(private readonly preferenceService: PreferenceService) {}
-    private getUserId(req: AuthRequest): string {
-        if (!req.user || !req.user.userId) {
-            throw new Error("Utilisateur non authentifié.");
-        }
-        return req.user.userId;
-    }
 
     async getMyPreferences(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
 
             const preferences = await this.preferenceService.getUserPreferences(userId);
             res.status(200).json(preferences);
@@ -29,7 +23,7 @@ export class PreferenceController {
         }
 
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
             const { category, weight } = req.body;
 
             if (!category || typeof weight !== 'number') {

@@ -22,6 +22,13 @@ function isJwtUserPayload(payload: unknown): payload is JwtUserPayload {
     );
 }
 
+export const getUserId = (req: AuthRequest): string => {
+    if (!req.user || !req.user.userId) {
+        throw new Error("Utilisateur non authentifié.");
+    }
+    return req.user.userId;
+}
+
 export const AuthMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
 

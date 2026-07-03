@@ -1,17 +1,10 @@
 import type { Request, Response } from 'express';
-import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
+import { getUserId, type AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { SaleService } from '../service/SaleService.js';
 import type { SaleFilters } from '../repository/SaleRepository.js';
 
 export class SaleController {
     constructor(private readonly saleService: SaleService) {}
-
-    private getUserId(req: AuthRequest): string {
-        if (!req.user || !req.user.userId) {
-            throw new Error("Utilisateur non authentifié.");
-        }
-        return req.user.userId;
-    }
 
     async getAll(req: Request, res: Response): Promise<void> {
         try {
@@ -38,7 +31,7 @@ export class SaleController {
         }
 
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
 
             const saleData = {
                 title: req.body.title,

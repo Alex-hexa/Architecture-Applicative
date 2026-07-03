@@ -1,5 +1,5 @@
 import type { Response } from 'express';
-import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
+import { getUserId, type AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { UserService } from '../service/UserService.js';
 import type { User } from '../models/UserModel.js';
 import { z } from 'zod';
@@ -16,16 +16,9 @@ const updateUserSchema = z.object({
 export class UserController {
     constructor(private readonly userService: UserService) {}
 
-    private getUserId(req: AuthRequest): string {
-        if (!req.user || !req.user.userId) {
-            throw new Error("Utilisateur non authentifié.");
-        }
-        return req.user.userId;
-    }
-
     async getProfile(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
             const user = await this.userService.getUserProfile(userId);
             res.status(200).json(user);
         } catch (error: any) {
@@ -40,7 +33,7 @@ export class UserController {
         }
 
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
             const validatedData = updateUserSchema.parse(req.body);
             
             const cleanData = Object.fromEntries(
@@ -65,7 +58,7 @@ export class UserController {
 
     async deleteAccount(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const userId = this.getUserId(req);
+            const userId = getUserId(req);
             await this.userService.deleteUser(userId);
             
             res.status(200).json({ message: "Votre compte a été supprimé avec succès." });

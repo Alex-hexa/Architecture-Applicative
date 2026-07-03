@@ -2,15 +2,20 @@ import type { Response } from 'express';
 import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { CommandService } from '../service/CommandService.js';
 import type { CommandFilters } from '../repository/CommandRepository.js';
-import jwt from 'jsonwebtoken';
 
 export class CommandController {
     constructor(private readonly commandService: CommandService) {}
 
+    private getUserId(req: AuthRequest): string {
+        if (!req.user || !req.user.userId) {
+            throw new Error("Utilisateur non authentifié.");
+        }
+        return req.user.userId;
+    }
+
     async create(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const decodedToken = req.user as jwt.JwtPayload;
-            const userId = decodedToken.userId;
+            const userId = this.getUserId(req);
             const { sale_id } = req.body;
 
             const newCommand = await this.commandService.createCommand(userId, sale_id);
@@ -22,8 +27,7 @@ export class CommandController {
 
     async getAll(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const decodedToken = req.user as jwt.JwtPayload;
-            const userId = decodedToken.userId;
+            const userId = this.getUserId(req);
 
             const filters: CommandFilters = {};
             if (req.query.status) filters.status = req.query.status as string;

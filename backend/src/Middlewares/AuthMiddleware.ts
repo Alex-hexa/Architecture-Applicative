@@ -4,8 +4,22 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+export interface JwtUserPayload {
+    userId: string;
+    email: string;
+}
+
 export interface AuthRequest extends Request {
-    user?: string | jwt.JwtPayload;
+    user?: JwtUserPayload;
+}
+
+function isJwtUserPayload(payload: unknown): payload is JwtUserPayload {
+    return (
+        typeof payload === 'object' &&
+        payload !== null &&
+        'userId' in payload &&
+        typeof (payload as JwtUserPayload).userId === 'string'
+    );
 }
 
 export const AuthMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
@@ -25,9 +39,14 @@ export const AuthMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
         }
 
         const decoded = jwt.verify(token, secret);
-        
+
+        if (!isJwtUserPayload(decoded)) {
+            res.status(401).json({ error: 'Token invalide.' });
+            return;
+        }
+
         req.user = decoded;
-        
+
         next();
     } catch (error) {
         res.status(401).json({ error: 'Token invalide ou expiré.' });

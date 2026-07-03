@@ -1,15 +1,19 @@
 import type { Response } from 'express';
 import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { PreferenceService } from '../service/PreferenceService.js';
-import jwt from 'jsonwebtoken';
 
 export class PreferenceController {
     constructor(private readonly preferenceService: PreferenceService) {}
+    private getUserId(req: AuthRequest): string {
+        if (!req.user || !req.user.userId) {
+            throw new Error("Utilisateur non authentifié.");
+        }
+        return req.user.userId;
+    }
 
     async getMyPreferences(req: AuthRequest, res: Response): Promise<void> {
         try {
-            const decodedToken = req.user as jwt.JwtPayload;
-            const userId = decodedToken.userId;
+            const userId = this.getUserId(req);
 
             const preferences = await this.preferenceService.getUserPreferences(userId);
             res.status(200).json(preferences);
@@ -19,10 +23,13 @@ export class PreferenceController {
     }
 
     async addInteraction(req: AuthRequest, res: Response): Promise<void> {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
+            return;
+        }
+
         try {
-            const decodedToken = req.user as jwt.JwtPayload;
-            const userId = decodedToken.userId;
-            
+            const userId = this.getUserId(req);
             const { category, weight } = req.body;
 
             if (!category || typeof weight !== 'number') {

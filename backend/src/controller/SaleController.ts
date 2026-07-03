@@ -2,10 +2,16 @@ import type { Request, Response } from 'express';
 import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { SaleService } from '../service/SaleService.js';
 import type { SaleFilters } from '../repository/SaleRepository.js';
-import jwt from 'jsonwebtoken';
 
 export class SaleController {
     constructor(private readonly saleService: SaleService) {}
+
+    private getUserId(req: AuthRequest): string {
+        if (!req.user || !req.user.userId) {
+            throw new Error("Utilisateur non authentifié.");
+        }
+        return req.user.userId;
+    }
 
     async getAll(req: Request, res: Response): Promise<void> {
         try {
@@ -26,14 +32,13 @@ export class SaleController {
     }
 
     async create(req: AuthRequest, res: Response): Promise<void> {
-        try {
-            const decodedToken = req.user as jwt.JwtPayload;
-            const userId = decodedToken.userId;
+        if (!req.body || Object.keys(req.body).length === 0) {
+            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
+            return;
+        }
 
-            if (!userId) {
-                res.status(401).json({ error: "Utilisateur non identifié." });
-                return;
-            }
+        try {
+            const userId = this.getUserId(req);
 
             const saleData = {
                 title: req.body.title,

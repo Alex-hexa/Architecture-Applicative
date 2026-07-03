@@ -30,9 +30,13 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     async register(req: Request, res: Response): Promise<void> {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
+            return;
+        }
+
         try {
             const validatedData = registerSchema.parse(req.body);
-
             const user = await this.authService.register(validatedData);
             res.status(201).json(user);
         } catch (error: unknown) {
@@ -49,9 +53,13 @@ export class AuthController {
     }
 
     async login(req: Request, res: Response): Promise<void> {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
+            return;
+        }
+
         try {
             const validatedData = loginSchema.parse(req.body);
-            
             const result = await this.authService.login(validatedData.email, validatedData.password);
             res.status(200).json(result);
         } catch (error: unknown) {

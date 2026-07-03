@@ -2,6 +2,11 @@ import type { Response } from 'express';
 import type { AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { CommandService } from '../service/CommandService.js';
 import type { CommandFilters } from '../repository/CommandRepository.js';
+import { z } from 'zod';
+
+const createCommandSchema = z.object({
+    sale_id: z.string().min(1, "L'ID de l'annonce est requis.")
+});
 
 export class CommandController {
     constructor(private readonly commandService: CommandService) {}
@@ -14,14 +19,26 @@ export class CommandController {
     }
 
     async create(req: AuthRequest, res: Response): Promise<void> {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
+            return;
+        }
+
         try {
             const userId = this.getUserId(req);
-            const { sale_id } = req.body;
-
-            const newCommand = await this.commandService.createCommand(userId, sale_id);
+            const validatedData = createCommandSchema.parse(req.body);
+            const newCommand = await this.commandService.createCommand(userId, validatedData.sale_id);
             res.status(201).json(newCommand);
-        } catch (error: any) {
-            res.status(400).json({ error: error.message });
+        } catch (error: unknown) {
+            if (error instanceof z.ZodError) {
+                res.status(400).json({ error: error.issues.map(e => e.message).join(' | ') });
+                return;
+            }
+            if (error instanceof Error) {
+                res.status(400).json({ error: error.message });
+                return;
+            }
+            res.status(400).json({ error: "Une erreur inattendue est survenue." });
         }
     }
 

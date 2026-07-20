@@ -1,12 +1,21 @@
 import type { Request, Response } from 'express';
 import { getUserId, type AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { SaleService } from '../service/SaleService.js';
+import { PreferenceService } from '../service/PreferenceService.js';
 import type { SaleFilters } from '../repository/SaleRepository.js';
 
-export class SaleController {
-    constructor(private readonly saleService: SaleService) {}
+const CATEGORIES_VALIDEES = [
+    'Informatique', 'Sport', 'Animaux', 'Service', 
+    'Livre', 'Cuisine', 'Vêtement', 'Jeux Vidéo', 'Fourniture'
+];
 
-    async getAll(req: Request, res: Response): Promise<void> {
+export class SaleController {
+    constructor(
+        private readonly saleService: SaleService,
+        private readonly preferenceService: PreferenceService
+    ) {}
+
+    async getAll(req: AuthRequest, res: Response): Promise<void> {
         try {
             const filters: SaleFilters = {};
 
@@ -16,7 +25,14 @@ export class SaleController {
             if (req.query.sortBy) filters.sortBy = req.query.sortBy as 'price' | 'date';
             if (req.query.sortOrder) filters.sortOrder = req.query.sortOrder as 'asc' | 'desc';
 
-            const sales = await this.saleService.getSales(filters);
+            let userPreferences: any[] = [];
+            try {
+                const userId = getUserId(req);
+                userPreferences = await this.preferenceService.getUserPreferences(userId);
+            } catch (error) {
+            }
+
+            const sales = await this.saleService.getSales(filters, userPreferences);
             
             res.status(200).json(sales);
         } catch (error: any) {
@@ -25,10 +41,17 @@ export class SaleController {
     }
 
     async create(req: AuthRequest, res: Response): Promise<void> {
-        if (!req.body || Object.keys(req.body).length === 0) {
-            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
-            return;
-        }
+    if (!req.body || Object.keys(req.body).length === 0) {
+        res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
+        return;
+    }
+
+    if (!CATEGORIES_VALIDEES.includes(req.body.categorie)) {
+        res.status(400).json({ 
+            error: `Catégorie invalide. Veuillez choisir parmi : ${CATEGORIES_VALIDEES.join(', ')}` 
+        });
+        return;
+    }
 
         try {
             const userId = getUserId(req);
@@ -39,6 +62,8 @@ export class SaleController {
                 description: req.body.description,
                 quantity: Number(req.body.quantity),
                 categorie: req.body.categorie,
+                seller_rating: Number(req.body.seller_rating || 0),
+                wear_level: Number(req.body.wear_level || 0),
                 user_id: userId,
                 created_at: new Date()
             };

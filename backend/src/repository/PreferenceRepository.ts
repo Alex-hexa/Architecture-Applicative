@@ -10,26 +10,26 @@ export class PreferenceRepository {
     async findByUserId(userId: string): Promise<Preference[]> {
         const { data, error } = await supabase
             .from('preference')
-            .select('*')
+            .select('*, sale(*)')
             .eq('user_id', userId);
 
         if (error) {
             throw new Error(`Erreur lors de la récupération des préférences : ${error.message}`);
         }
 
-        return data as Preference[];
+        return data as any[];
     }
 
-    async upsert(userId: string, category: string, scoreToAdd: number): Promise<Preference> {
+    async upsert(userId: string, saleId: string, scoreToAdd: number): Promise<Preference> {
         const { data: existingPref, error: searchError } = await supabase
             .from('preference')
             .select('*')
             .eq('user_id', userId)
-            .eq('category', category)
+            .eq('sale_id', saleId)
             .single(); 
 
         if (searchError && searchError.code !== 'PGRST116') {
-            throw new Error(`Erreur lors de la vérification de la préférence : ${searchError.message}`);
+            throw new Error(`Erreur vérification préférence : ${searchError.message}`);
         }
 
         if (existingPref) {
@@ -45,9 +45,7 @@ export class PreferenceRepository {
                 .select()
                 .single();
 
-            if (updateError) {
-                throw new Error(`Erreur lors de la mise à jour du score : ${updateError.message}`);
-            }
+            if (updateError) throw new Error(`Erreur mise à jour : ${updateError.message}`);
             return data as Preference;
 
         } else {
@@ -55,16 +53,14 @@ export class PreferenceRepository {
                 .from('preference')
                 .insert([{
                     user_id: userId,
-                    category: category,
+                    sale_id: saleId,
                     score: scoreToAdd,
                     last_interaction: new Date()
                 }])
                 .select()
                 .single();
 
-            if (insertError) {
-                throw new Error(`Erreur lors de la création de la préférence : ${insertError.message}`);
-            }
+            if (insertError) throw new Error(`Erreur création : ${insertError.message}`);
             return data as Preference;
         }
     }

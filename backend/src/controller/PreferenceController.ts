@@ -8,7 +8,6 @@ export class PreferenceController {
     async getMyPreferences(req: AuthRequest, res: Response): Promise<void> {
         try {
             const userId = getUserId(req);
-
             const preferences = await this.preferenceService.getUserPreferences(userId);
             res.status(200).json(preferences);
         } catch (error: any) {
@@ -24,14 +23,14 @@ export class PreferenceController {
 
         try {
             const userId = getUserId(req);
-            const { category, weight } = req.body;
+            const { sale_id, weight } = req.body;
 
-            if (!category || typeof weight !== 'number') {
-                res.status(400).json({ error: "La catégorie et le poids (nombre) sont requis." });
+            if (!sale_id || typeof weight !== 'number') {
+                res.status(400).json({ error: "L'ID de l'annonce et le poids sont requis." });
                 return;
             }
 
-            const updatedPreference = await this.preferenceService.recordInteraction(userId, category, weight);
+            const updatedPreference = await this.preferenceService.recordInteraction(userId, sale_id, weight);
             res.status(200).json(updatedPreference);
         } catch (error: any) {
             res.status(400).json({ error: error.message });

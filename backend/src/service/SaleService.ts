@@ -1,21 +1,20 @@
 import { SaleRepository, type SaleFilters } from '../repository/SaleRepository.js';
 import type { Sale } from '../models/SaleModel.js';
+import type { ScoringStrategy } from './ScoringStrategies.js';
+import type { Preference } from '../models/PreferenceModel.js';
 
 export class SaleService {
-    constructor(private readonly saleRepository: SaleRepository) {}
+    constructor(
+        private readonly saleRepository: SaleRepository,
+        private readonly scoringStrategy: ScoringStrategy 
+    ) {}
 
-    async getSales(filters: SaleFilters): Promise<Sale[]> {
-        return this.saleRepository.findAll(filters);
+    async getSales(filters: SaleFilters, userPreferences: Preference[] = []): Promise<Sale[]> {
+        const sales = await this.saleRepository.findAll(filters);
+        return this.scoringStrategy.score(sales, userPreferences);
     }
 
     async createSale(saleData: Omit<Sale, 'id'>): Promise<Sale> {
-        if (saleData.price < 0) {
-            throw new Error("Le prix ne peut pas être négatif.");
-        }
-        if (saleData.quantity <= 0) {
-            throw new Error("La quantité doit être supérieure à 0.");
-        }
-        
         return this.saleRepository.create(saleData);
     }
 }

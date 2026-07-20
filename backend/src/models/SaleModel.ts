@@ -7,4 +7,6 @@ export interface Sale {
     categorie: string;
     user_id: string;
     created_at: Date;
+    seller_rating: number;
+    wear_level: number;
 }

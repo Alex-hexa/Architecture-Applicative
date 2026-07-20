@@ -12,7 +12,9 @@ export class MockSaleRepository {
             quantity: 1,
             categorie: 'Informatique',
             user_id: 'user-id-alexandre',
-            created_at: new Date('2026-06-01T10:00:00Z')
+            created_at: new Date('2026-06-01T10:00:00Z'),
+            seller_rating: 4.8,
+            wear_level: 0
         },
         {
             id: '22222222-2222-2222-2222-222222222222',
@@ -22,7 +24,9 @@ export class MockSaleRepository {
             quantity: 1,
             categorie: 'Sport',
             user_id: 'user-id-maxime',
-            created_at: new Date('2026-06-02T15:30:00Z')
+            created_at: new Date('2026-06-02T15:30:00Z'),
+            seller_rating: 4.2,
+            wear_level: 2
         },
         {
             id: '33333333-3333-3333-3333-333333333333',
@@ -32,7 +36,9 @@ export class MockSaleRepository {
             quantity: 5,
             categorie: 'Service',
             user_id: 'user-id-alexandre',
-            created_at: new Date()
+            created_at: new Date(),
+            seller_rating: 5.0,
+            wear_level: 0
         }
     ];
 

@@ -5,6 +5,7 @@ import { PreferenceService } from '../service/PreferenceService.js';
 import type { SaleFilters } from '../repository/SaleRepository.js';
 import type { Sale } from '../models/SaleModel.js';
 import { z } from 'zod';
+import { BodyValidationHandler, CategoryValidationHandler, PriceValidationHandler } from '../service/chain/SaleChain.js';
 
 const CATEGORIES_VALIDEES = [
     'Informatique', 'Sport', 'Animaux', 'Service', 
@@ -52,17 +53,15 @@ export class SaleController {
     }
 
     async create(req: AuthRequest, res: Response): Promise<void> {
-    if (!req.body || Object.keys(req.body).length === 0) {
-        res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
-        return;
-    }
-
-    if (!CATEGORIES_VALIDEES.includes(req.body.categorie)) {
-        res.status(400).json({ 
-            error: `Catégorie invalide. Veuillez choisir parmi : ${CATEGORIES_VALIDEES.join(', ')}` 
-        });
-        return;
-    }
+        const bodyHandler = new BodyValidationHandler();
+        const categoryHandler = new CategoryValidationHandler();
+        const priceHandler = new PriceValidationHandler();
+        bodyHandler.setNext(categoryHandler).setNext(priceHandler);
+        const validationError = bodyHandler.handle(req);
+        if (validationError) {
+            res.status(400).json({ error: validationError });
+            return;
+        }
 
         try {
             const userId = getUserId(req);

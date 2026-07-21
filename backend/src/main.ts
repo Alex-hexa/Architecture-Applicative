@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { UserRepository } from './repository/UserRepository.js';
 import { UserService } from './service/UserService.js';
 import { UserController } from './controller/UserController.js';
@@ -17,6 +18,7 @@ import { PreferenceController } from './controller/PreferenceController.js';
 import { BarycenterScoringStrategy, WeightedScoringStrategy } from './service/ScoringStrategies.js';
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const userRepository = new UserRepository();
@@ -24,8 +26,8 @@ const saleRepository = new SaleRepository();
 const commandRepository = new CommandRepository();
 const preferenceRepository = new PreferenceRepository();
 
-//const activeScoringStrategy = new BarycenterScoringStrategy(); 
-const activeScoringStrategy = new WeightedScoringStrategy();
+const activeScoringStrategy = new BarycenterScoringStrategy(); 
+//const activeScoringStrategy = new WeightedScoringStrategy();
 
 const userService = new UserService(userRepository);
 const authService = new AuthService(userRepository);
@@ -51,13 +53,18 @@ app.delete('/api/users/me', AuthMiddleware, (req, res) => userController.deleteA
 // Routes Sales
 app.get('/api/sales', AuthMiddleware, (req, res) => saleController.getAll(req, res as any));
 app.post('/api/sales', AuthMiddleware, (req, res) => saleController.create(req, res));
+app.get('/api/sales/:id', AuthMiddleware, (req, res) => saleController.getOne(req, res));
+app.patch('/api/sales/:id', AuthMiddleware, (req, res) => saleController.update(req, res));
+app.delete('/api/sales/:id', AuthMiddleware, (req, res) => saleController.delete(req, res));
 
 // Routes Preferences (Favoris)
 app.get('/api/preferences', AuthMiddleware, (req, res) => preferenceController.getMyPreferences(req, res));
 app.post('/api/preferences', AuthMiddleware, (req, res) => preferenceController.addInteraction(req, res));
+app.delete('/api/preferences/:saleId', AuthMiddleware, (req, res) => preferenceController.removeInteraction(req, res)); // Ajout de la route DELETE
 
 // Routes Commands
 app.get('/api/commands', AuthMiddleware, (req, res) => commandController.getAll(req, res));
 app.post('/api/commands', AuthMiddleware, (req, res) => commandController.create(req, res));
+app.patch('/api/commands/:id/status', AuthMiddleware, (req, res) => commandController.updateStatus(req, res));
 
 app.listen(3000, () => console.log('Serveur démarré sur le port 3000'));

@@ -60,12 +60,10 @@ export class WeightedScoringStrategy implements ScoringStrategy {
 }
 
 export class BarycenterScoringStrategy implements ScoringStrategy {
-
     // Le Barycentre sémantique - O(n*log(n)) pour le tri, O(n) pour le calcul.
     // Selon les préférences de l'utilisateur
     score(sales: Sale[], userPreferences: Preference[] = []): SaleWithScore[] {
         if (sales.length === 0) return [];
-
         let minPrice = Infinity, maxPrice = -Infinity;
         let minQty = Infinity, maxQty = -Infinity;
         let minRating = Infinity, maxRating = -Infinity;
@@ -82,88 +80,56 @@ export class BarycenterScoringStrategy implements ScoringStrategy {
             if (sale.wear_level > maxWear) maxWear = sale.wear_level;
         }
 
-        const priceRange = maxPrice - minPrice || 1;
-        const qtyRange = maxQty - minQty || 1;
-        const ratingRange = maxRating - minRating || 1;
-        const wearRange = maxWear - minWear || 1;
+        const getNorm = (val: number, min: number, max: number) => {
+            if (max === min) return 0; 
+            return (val - min) / (max - min);
+        };
 
-        let userIdeal = { price: 0, qty: 0, rating: 0, wear: 0 };
-        let categorieDominante = "";
-        
-        if (userPreferences.length > 0) {
-            let sumPrice = 0, sumQty = 0, sumRating = 0, sumWear = 0;
-            let totalWeight = 0; 
-            
-            const categoryScores: Record<string, number> = {};
-            
-            for (const pref of userPreferences) {
-                if (pref.sale) {
-                    const weight = pref.score > 0 ? pref.score : 1; 
-
-                    sumPrice += pref.sale.price * weight;
-                    sumQty += pref.sale.quantity * weight;
-                    sumRating += pref.sale.seller_rating * weight;
-                    sumWear += pref.sale.wear_level * weight;
-                    totalWeight += weight;
-                    
-                    const cat = pref.sale.categorie;
-                    categoryScores[cat] = (categoryScores[cat] || 0) + weight;
-                }
-            }
-            
-            if (totalWeight > 0) {
-                userIdeal = {
-                    price: sumPrice / totalWeight,
-                    qty: sumQty / totalWeight,
-                    rating: sumRating / totalWeight,
-                    wear: sumWear / totalWeight
-                };
-                
-                let maxCatScore = 0;
-                for (const cat in categoryScores) {
-                    const catScore = categoryScores[cat] ?? 0;
-                    
-                    if (catScore > maxCatScore) {
-                        maxCatScore = catScore;
-                        categorieDominante = cat;
-                    }
-                }
-            } else {
-                return sales.map(sale => ({ ...sale, score: 0 }));
-            }
-        } else {
-            return sales.map(sale => ({ ...sale, score: 0 })); 
+        if (userPreferences.length === 0) {
+            return sales.map(sale => ({ ...sale, score: 0 }));
         }
 
+        let sumNormPrice = 0, sumNormQty = 0, sumNormRating = 0, sumNormWear = 0;
+        let validFavoritesCount = 0;
+
+        for (const pref of userPreferences) {
+            if (pref.sale) {
+                sumNormPrice += getNorm(pref.sale.price, minPrice, maxPrice);
+                sumNormQty += getNorm(pref.sale.quantity, minQty, maxQty);
+                sumNormRating += getNorm(pref.sale.seller_rating, minRating, maxRating);
+                sumNormWear += getNorm(pref.sale.wear_level, minWear, maxWear);
+                validFavoritesCount++;
+            }
+        }
+
+        if (validFavoritesCount === 0) {
+            return sales.map(sale => ({ ...sale, score: 0 }));
+        }
+
+        const barycenter = {
+            price: sumNormPrice / validFavoritesCount,
+            qty: sumNormQty / validFavoritesCount,
+            rating: sumNormRating / validFavoritesCount,
+            wear: sumNormWear / validFavoritesCount
+        };
+
         const scoredSales = sales.map(sale => {
-            const normSalePrice = (sale.price - minPrice) / priceRange;
-            const normUserPrice = (userIdeal.price - minPrice) / priceRange;
-            
-            const normSaleQty = (sale.quantity - minQty) / qtyRange;
-            const normUserQty = (userIdeal.qty - minQty) / qtyRange;
-            
-            const normSaleRating = (sale.seller_rating - minRating) / ratingRange;
-            const normUserRating = (userIdeal.rating - minRating) / ratingRange;
-            
-            const normSaleWear = (sale.wear_level - minWear) / wearRange;
-            const normUserWear = (userIdeal.wear - minWear) / wearRange;
+            const normPrice = getNorm(sale.price, minPrice, maxPrice);
+            const normQty = getNorm(sale.quantity, minQty, maxQty);
+            const normRating = getNorm(sale.seller_rating, minRating, maxRating);
+            const normWear = getNorm(sale.wear_level, minWear, maxWear);
 
             const distance = Math.sqrt(
-                Math.pow(normSalePrice - normUserPrice, 2) +
-                Math.pow(normSaleQty - normUserQty, 2) +
-                Math.pow(normSaleRating - normUserRating, 2) +
-                Math.pow(normSaleWear - normUserWear, 2)
+                Math.pow(normPrice - barycenter.price, 2) +
+                Math.pow(normQty - barycenter.qty, 2) +
+                Math.pow(normRating - barycenter.rating, 2) +
+                Math.pow(normWear - barycenter.wear, 2)
             );
+            const score = 100 / (1 + distance);
             
-            let similarityScore = 100 / (1 + distance);
-
-            if (categorieDominante && sale.categorie === categorieDominante) {
-                similarityScore += 50; 
-            }
-            
-            return { ...sale, score: similarityScore };
+            return { ...sale, score };
         });
-        
+
         return scoredSales.sort((a, b) => b.score - a.score);
     }
 }

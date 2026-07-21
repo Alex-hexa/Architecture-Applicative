@@ -15,4 +15,12 @@ export class CommandService {
     async getUserCommands(userId: string, filters: CommandFilters): Promise<Command[]> {
         return this.commandRepository.findAllByUser(userId, filters);
     }
+
+    async updateCommandStatus(commandId: string, status: string): Promise<Command> {
+        const allowedStatuses = ['En cours', 'Expédiée', 'Livrée', 'Annulée'];
+        if (!allowedStatuses.includes(status)) {
+            throw new Error(`Statut invalide. Attendu: ${allowedStatuses.join(', ')}`);
+        }
+        return this.commandRepository.updateStatus(commandId, status);
+    }
 }

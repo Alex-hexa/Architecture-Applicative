@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-lbc-orange: #ff6e14;
+  --color-lbc-dark: #1a1a1a;
+  --color-lbc-gray: #f4f6f7;
+  --color-lbc-blue: #1172a1;
+}
+
+@layer base {
+  body {
+    @apply bg-lbc-gray text-lbc-dark font-sans;
+  }
+}

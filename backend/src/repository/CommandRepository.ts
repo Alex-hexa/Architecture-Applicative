@@ -56,4 +56,16 @@ export class CommandRepository {
 
         return data as any[];
     }
+
+    async updateStatus(commandId: string, status: string): Promise<Command> {
+        const { data, error } = await supabase
+            .from('command')
+            .update({ status })
+            .eq('id', commandId)
+            .select()
+            .single();
+
+        if (error) throw new Error(`Erreur mise à jour du statut : ${error.message}`);
+        return data as Command;
+    }
 }

@@ -44,6 +44,44 @@ export class SaleRepository {
         return data as Sale[];
     }
 
+    async findById(id: string): Promise<Sale | null> {
+        const { data, error } = await supabase
+            .from('sale')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error || !data) return null;
+        return data as Sale;
+    }
+
+    async update(id: string, userId: string, updateData: Partial<Sale>): Promise<Sale> {
+        const { data, error } = await supabase
+            .from('sale')
+            .update(updateData)
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select()
+            .single();
+
+        if (error) {
+            throw new Error(`Erreur lors de la mise à jour (ou droits insuffisants) : ${error.message}`);
+        }
+        return data as Sale;
+    }
+
+    async delete(id: string, userId: string): Promise<void> {
+        const { error } = await supabase
+            .from('sale')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId);
+
+        if (error) {
+            throw new Error(`Erreur lors de la suppression de l'annonce : ${error.message}`);
+        }
+    }
+
     async create(sale: Omit<Sale, 'id'>): Promise<Sale> {
         const { data, error } = await supabase
             .from('sale')

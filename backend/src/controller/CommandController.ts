@@ -8,6 +8,10 @@ const createCommandSchema = z.object({
     sale_id: z.string().min(1, "L'ID de l'annonce est requis.")
 });
 
+const updateCommandStatusSchema = z.object({
+    status: z.string().min(1, "Le statut est requis.")
+});
+
 export class CommandController {
     constructor(private readonly commandService: CommandService) {}
 
@@ -48,6 +52,22 @@ export class CommandController {
             res.status(200).json(commands);
         } catch (error: any) {
             res.status(500).json({ error: error.message });
+        }
+    }
+
+    async updateStatus(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const commandId = req.params.id as string;
+            const validatedData = updateCommandStatusSchema.parse(req.body);
+            
+            const updatedCommand = await this.commandService.updateCommandStatus(commandId, validatedData.status);
+            res.status(200).json(updatedCommand);
+        } catch (error: any) {
+            if (error instanceof z.ZodError) {
+                res.status(400).json({ error: error.issues.map(e => e.message).join(' | ') });
+                return;
+            }
+            res.status(400).json({ error: error.message });
         }
     }
 }

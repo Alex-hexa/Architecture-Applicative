@@ -16,22 +16,29 @@ export class PreferenceController {
     }
 
     async addInteraction(req: AuthRequest, res: Response): Promise<void> {
-        if (!req.body || Object.keys(req.body).length === 0) {
-            res.status(400).json({ error: "Le corps de la requête est vide ou manquant." });
-            return;
-        }
-
         try {
             const userId = getUserId(req);
             const { sale_id, weight } = req.body;
+            const updatedPreference = await this.preferenceService.recordInteraction(userId, sale_id, weight);
+            res.status(200).json(updatedPreference);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    }
 
-            if (!sale_id || typeof weight !== 'number') {
-                res.status(400).json({ error: "L'ID de l'annonce et le poids sont requis." });
+    async removeInteraction(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const userId = getUserId(req);
+            
+            const saleId = req.params.saleId as string;
+
+            if (!saleId) {
+                res.status(400).json({ error: "L'ID de l'annonce est requis." });
                 return;
             }
 
-            const updatedPreference = await this.preferenceService.recordInteraction(userId, sale_id, weight);
-            res.status(200).json(updatedPreference);
+            await this.preferenceService.removeInteraction(userId, saleId);
+            res.status(204).send();
         } catch (error: any) {
             res.status(400).json({ error: error.message });
         }

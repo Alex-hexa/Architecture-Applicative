@@ -33,12 +33,9 @@ export class PreferenceRepository {
         }
 
         if (existingPref) {
-            const newScore = existingPref.score + scoreToAdd;
-            
             const { data, error: updateError } = await supabase
                 .from('preference')
                 .update({ 
-                    score: newScore, 
                     last_interaction: new Date() 
                 })
                 .eq('id', existingPref.id) 
@@ -62,6 +59,18 @@ export class PreferenceRepository {
 
             if (insertError) throw new Error(`Erreur création : ${insertError.message}`);
             return data as Preference;
+        }
+    }
+
+    async delete(userId: string, saleId: string): Promise<void> {
+        const { error } = await supabase
+            .from('preference')
+            .delete()
+            .eq('user_id', userId)
+            .eq('sale_id', saleId);
+
+        if (error) {
+            throw new Error(`Erreur lors de la suppression du favori : ${error.message}`);
         }
     }
 }

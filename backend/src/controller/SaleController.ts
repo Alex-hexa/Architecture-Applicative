@@ -3,11 +3,22 @@ import { getUserId, type AuthRequest } from '../middlewares/AuthMiddleware.js';
 import { SaleService } from '../service/SaleService.js';
 import { PreferenceService } from '../service/PreferenceService.js';
 import type { SaleFilters } from '../repository/SaleRepository.js';
+import type { Sale } from '../models/SaleModel.js';
+import { z } from 'zod';
 
 const CATEGORIES_VALIDEES = [
     'Informatique', 'Sport', 'Animaux', 'Service', 
     'Livre', 'Cuisine', 'Vêtement', 'Jeux Vidéo', 'Fourniture'
 ];
+
+const updateSaleSchema = z.object({
+    title: z.string().min(3).optional(),
+    price: z.number().min(0).optional(),
+    description: z.string().nullable().optional(),
+    quantity: z.number().min(0).optional(),
+    categorie: z.string().optional(),
+    wear_level: z.number().min(0).max(5).optional()
+});
 
 export class SaleController {
     constructor(
@@ -71,6 +82,60 @@ export class SaleController {
             const newSale = await this.saleService.createSale(saleData);
             
             res.status(201).json(newSale);
+        } catch (error: any) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getOne(req: Request, res: Response): Promise<void> {
+        try {
+            const saleId = req.params.id as string;
+            const sale = await this.saleService.getSaleById(saleId);
+            res.status(200).json(sale);
+        } catch (error: any) {
+            res.status(404).json({ error: error.message });
+        }
+    }
+
+    async update(req: AuthRequest, res: Response): Promise<void> {
+        if (!req.body || Object.keys(req.body).length === 0) {
+            res.status(400).json({ error: "Aucune donnée à mettre à jour." });
+            return;
+        }
+
+        try {
+            const userId = getUserId(req);
+            const saleId = req.params.id as string;
+            
+            const validatedData = updateSaleSchema.parse(req.body);
+            
+            if (validatedData.categorie && !CATEGORIES_VALIDEES.includes(validatedData.categorie)) {
+                res.status(400).json({ error: "Catégorie invalide." });
+                return;
+            }
+
+            const cleanData = Object.fromEntries(
+                Object.entries(validatedData).filter(([_, value]) => value !== undefined)
+            ) as Partial<Sale>;
+            
+            const updatedSale = await this.saleService.updateSale(saleId, userId, cleanData);
+            res.status(200).json(updatedSale);
+        } catch (error: any) {
+            if (error instanceof z.ZodError) {
+                res.status(400).json({ error: error.issues.map(e => e.message).join(' | ') });
+                return;
+            }
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async delete(req: AuthRequest, res: Response): Promise<void> {
+        try {
+            const userId = getUserId(req);
+            const saleId = req.params.id as string;
+            
+            await this.saleService.deleteSale(saleId, userId);
+            res.status(204).send();
         } catch (error: any) {
             res.status(400).json({ error: error.message });
         }

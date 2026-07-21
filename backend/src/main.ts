@@ -15,7 +15,7 @@ import { CommandController } from './controller/CommandController.js';
 import { PreferenceRepository } from './repository/PreferenceRepository.js';
 import { PreferenceService } from './service/PreferenceService.js';
 import { PreferenceController } from './controller/PreferenceController.js';
-import { BarycenterScoringStrategy, WeightedScoringStrategy } from './service/ScoringStrategies.js';
+import { ScoringStrategyFactory } from './service/ScoringStrategies.js';
 
 const app = express();
 app.use(cors());
@@ -26,8 +26,8 @@ const saleRepository = new SaleRepository();
 const commandRepository = new CommandRepository();
 const preferenceRepository = new PreferenceRepository();
 
-const activeScoringStrategy = new BarycenterScoringStrategy(); 
-//const activeScoringStrategy = new WeightedScoringStrategy();
+// Ou const activeScoringStrategy = ScoringStrategyFactory.create("weighted");
+const activeScoringStrategy = ScoringStrategyFactory.create("barycenter");
 
 const userService = new UserService(userRepository);
 const authService = new AuthService(userRepository);

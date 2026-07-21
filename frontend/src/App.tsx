@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import CreateSale from './pages/CreateSale';
 import DetailsSale from './pages/DetailsSale';
 import EditSale from './pages/EditSale';
+import Register from './pages/Register';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/sales/new" element={<CreateSale />} />

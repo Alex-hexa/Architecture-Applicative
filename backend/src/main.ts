@@ -15,7 +15,9 @@ import { CommandController } from './controller/CommandController.js';
 import { PreferenceRepository } from './repository/PreferenceRepository.js';
 import { PreferenceService } from './service/PreferenceService.js';
 import { PreferenceController } from './controller/PreferenceController.js';
-import { ScoringStrategyFactory } from './service/ScoringStrategies.js';
+
+// Import de la Factory
+import { ScoringStrategyFactory } from './service/factory/ScoringFactory.js';
 
 const app = express();
 app.use(cors());
@@ -26,8 +28,8 @@ const saleRepository = new SaleRepository();
 const commandRepository = new CommandRepository();
 const preferenceRepository = new PreferenceRepository();
 
-// Ou const activeScoringStrategy = ScoringStrategyFactory.create("weighted");
-const activeScoringStrategy = ScoringStrategyFactory.create("barycenter");
+// Utilisation de la Factory pour créer la stratégie
+const activeScoringStrategy = ScoringStrategyFactory.create("barycenter"); 
 
 const userService = new UserService(userRepository);
 const authService = new AuthService(userRepository);
@@ -60,7 +62,7 @@ app.delete('/api/sales/:id', AuthMiddleware, (req, res) => saleController.delete
 // Routes Preferences (Favoris)
 app.get('/api/preferences', AuthMiddleware, (req, res) => preferenceController.getMyPreferences(req, res));
 app.post('/api/preferences', AuthMiddleware, (req, res) => preferenceController.addInteraction(req, res));
-app.delete('/api/preferences/:saleId', AuthMiddleware, (req, res) => preferenceController.removeInteraction(req, res)); // Ajout de la route DELETE
+app.delete('/api/preferences/:saleId', AuthMiddleware, (req, res) => preferenceController.removeInteraction(req, res));
 
 // Routes Commands
 app.get('/api/commands', AuthMiddleware, (req, res) => commandController.getAll(req, res));

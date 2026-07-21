@@ -10,6 +10,7 @@ import CreateSale from './pages/CreateSale';
 import DetailsSale from './pages/DetailsSale';
 import EditSale from './pages/EditSale';
 import Register from './pages/Register';
+import Orders from './pages/Orders';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/sales/new" element={<CreateSale />} />
             <Route path="/sales/:id" element={<DetailsSale />} />
             <Route path="/sales/:id/edit" element={<EditSale />} />

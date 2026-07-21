@@ -26,6 +26,9 @@ export default function Navbar() {
         <div className="flex items-center gap-4 text-sm font-medium">
           {isAuthenticated ? (
             <>
+              <Link to="/orders" className="hover:bg-gray-100 p-2 rounded-lg transition-colors flex flex-col items-center">
+                Mes Achats
+              </Link>
               <Link to="/favorites" className="hover:bg-gray-100 p-2 rounded-lg transition-colors flex flex-col items-center">
                 Favoris
               </Link>
@@ -40,12 +43,20 @@ export default function Navbar() {
               </button>
             </>
           ) : (
+            <>
             <Link 
               to="/login"
               className="hover:bg-gray-100 p-2 rounded-lg transition-colors flex flex-col items-center"
             >
               Se connecter
             </Link>
+            <Link
+              to="/register"
+              className="hover:bg-gray-100 p-2 rounded-lg transition-colors flex flex-col items-center"
+            >
+              S'inscrire
+            </Link>
+            </>
           )}
         </div>
       </div>

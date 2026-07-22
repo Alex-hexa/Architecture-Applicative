@@ -49,11 +49,8 @@ export class SaleController {
     }
 
     async create(req: AuthRequest, res: Response): Promise<void> {
-        const bodyHandler = new BodyValidationHandler();
-        const categoryHandler = new CategoryValidationHandler();
-        const priceHandler = new PriceValidationHandler();
-        bodyHandler.setNext(categoryHandler).setNext(priceHandler);
-        const validationError = bodyHandler.handle(req);
+        const validationError = this.saleService.validateSaleData(req.body);
+        
         if (validationError) {
             res.status(400).json({ error: validationError });
             return;

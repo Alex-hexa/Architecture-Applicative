@@ -2,12 +2,23 @@ import { SaleRepository, type SaleFilters } from '../repository/SaleRepository.j
 import type { Sale } from '../models/SaleModel.js';
 import type { ScoringStrategy } from './ScoringService.js';
 import type { Preference } from '../models/PreferenceModel.js';
+import { BodyValidationHandler, CategoryValidationHandler, PriceValidationHandler } from './chain/SaleChain.js';
 
 export class SaleService {
     constructor(
         private readonly saleRepository: SaleRepository,
         private readonly scoringStrategy: ScoringStrategy
     ) { }
+
+    validateSaleData(data: any): string | null {
+        const bodyHandler = new BodyValidationHandler();
+        const categoryHandler = new CategoryValidationHandler();
+        const priceHandler = new PriceValidationHandler();
+        
+        bodyHandler.setNext(categoryHandler).setNext(priceHandler);
+        
+        return bodyHandler.handle(data);
+    }
 
     async getSales(filters: SaleFilters, userPreferences: Preference[] = []): Promise<Sale[]> {
         const sales = await this.saleRepository.findAll(filters);

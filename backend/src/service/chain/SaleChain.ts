@@ -1,9 +1,8 @@
-import type { Request } from 'express';
 import { CATEGORIES_VALIDEES } from '../../constants/Categories.js';
 
 export interface ValidationHandler {
     setNext(handler: ValidationHandler): ValidationHandler;
-    handle(req: Request): string | null;
+    handle(data: any): string | null;
 }
 
 export abstract class AbstractValidationHandler implements ValidationHandler {
@@ -14,37 +13,37 @@ export abstract class AbstractValidationHandler implements ValidationHandler {
         return handler;
     }
 
-    public handle(req: Request): string | null {
+    public handle(data: any): string | null {
         if (this.nextHandler) {
-            return this.nextHandler.handle(req);
+            return this.nextHandler.handle(data);
         }
         return null;
     }
 }
 
 export class BodyValidationHandler extends AbstractValidationHandler {
-    public handle(req: Request): string | null {
-        if (!req.body || Object.keys(req.body).length === 0) {
+    public handle(data: any): string | null {
+        if (!data || Object.keys(data).length === 0) {
             return "Le corps de la requête est vide ou manquant.";
         }
-        return super.handle(req);
+        return super.handle(data);
     }
 }
 
 export class CategoryValidationHandler extends AbstractValidationHandler {
-    public handle(req: Request): string | null {
-        if (!CATEGORIES_VALIDEES.includes(req.body.categorie)) {
+    public handle(data: any): string | null {
+        if (!CATEGORIES_VALIDEES.includes(data.categorie)) {
             return `Catégorie invalide. Veuillez choisir parmi : ${CATEGORIES_VALIDEES.join(', ')}`;
         }
-        return super.handle(req);
+        return super.handle(data);
     }
 }
 
 export class PriceValidationHandler extends AbstractValidationHandler {
-    public handle(req: Request): string | null {
-        if (req.body.price !== undefined && Number(req.body.price) < 0) {
+    public handle(data: any): string | null {
+        if (data.price !== undefined && Number(data.price) < 0) {
             return "Le prix ne peut pas être négatif.";
         }
-        return super.handle(req);
+        return super.handle(data);
     }
 }

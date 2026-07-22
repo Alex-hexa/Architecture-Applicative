@@ -7,6 +7,11 @@ export interface SalesBounds {
     minWear: number; maxWear: number;
 }
 
+export const getNormMax = (val: number, min: number, max: number) => {
+    if (max === min) return 0; 
+    return (max - val) / (max - min);
+};
+
 export const getNorm = (val: number, min: number, max: number) => {
     if (max === min) return 0; 
     return (val - min) / (max - min);

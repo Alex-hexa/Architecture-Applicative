@@ -6,11 +6,7 @@ import type { SaleFilters } from '../repository/SaleRepository.js';
 import type { Sale } from '../models/SaleModel.js';
 import { z } from 'zod';
 import { BodyValidationHandler, CategoryValidationHandler, PriceValidationHandler } from '../service/chain/SaleChain.js';
-
-const CATEGORIES_VALIDEES = [
-    'Informatique', 'Sport', 'Animaux', 'Service', 
-    'Livre', 'Cuisine', 'Vêtement', 'Jeux Vidéo', 'Fourniture'
-];
+import { CATEGORIES_VALIDEES } from '../constants/Categories.js';
 
 const updateSaleSchema = z.object({
     title: z.string().min(3).optional(),

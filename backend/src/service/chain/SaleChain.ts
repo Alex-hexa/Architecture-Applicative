@@ -1,9 +1,5 @@
 import type { Request } from 'express';
-
-const CATEGORIES_VALIDEES = [
-    'Informatique', 'Sport', 'Animaux', 'Service', 
-    'Livre', 'Cuisine', 'Vêtement', 'Jeux Vidéo', 'Fourniture'
-];
+import { CATEGORIES_VALIDEES } from '../../constants/Categories.js';
 
 export interface ValidationHandler {
     setNext(handler: ValidationHandler): ValidationHandler;

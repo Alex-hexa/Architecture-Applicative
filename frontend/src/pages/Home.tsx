@@ -20,6 +20,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
+  const [titleFilter, setTitleFilter] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('desc');
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { token } = useAuth(); 
 
@@ -30,7 +36,19 @@ export default function Home() {
         const headers: HeadersInit = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 
-        const salesResponse = await fetch('http://localhost:3000/api/sales', { method: 'GET', headers });
+        const queryParams = new URLSearchParams();
+        if (titleFilter) queryParams.append('title', titleFilter);
+        if (minPrice) queryParams.append('minPrice', minPrice);
+        if (maxPrice) queryParams.append('maxPrice', maxPrice);
+        if (sortBy) {
+          queryParams.append('sortBy', sortBy);
+          queryParams.append('sortOrder', sortOrder);
+        }
+
+        const queryString = queryParams.toString();
+        const url = `http://localhost:3000/api/sales${queryString ? `?${queryString}` : ''}`;
+
+        const salesResponse = await fetch(url, { method: 'GET', headers });
         if (!salesResponse.ok) throw new Error('Erreur lors du chargement des annonces');
         setSales(await salesResponse.json());
 
@@ -52,7 +70,7 @@ export default function Home() {
   }, [token, refreshTrigger]);
 
   const handleFavorite = async (e: React.MouseEvent, saleId: string) => {
-    e.stopPropagation(); // Empêche le clic sur le cœur de déclencher la navigation vers l'annonce
+    e.stopPropagation(); 
     
     if (!token) {
       alert("Veuillez vous connecter pour gérer vos favoris.");
@@ -74,7 +92,6 @@ export default function Home() {
             next.delete(saleId);
             return next;
           });
-          setRefreshTrigger(prev => prev + 1);
         }
       } else {
         const response = await fetch('http://localhost:3000/api/preferences', {
@@ -85,7 +102,6 @@ export default function Home() {
 
         if (response.ok) {
           setFavorites(prev => new Set(prev).add(saleId));
-          setRefreshTrigger(prev => prev + 1);
         }
       }
     } catch (error) {
@@ -93,9 +109,90 @@ export default function Home() {
     }
   };
 
+  const applyFilters = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  const resetFilters = () => {
+    setTitleFilter('');
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('');
+    setSortOrder('desc');
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-8">
       <h2 className="text-xl font-bold mb-6">Des millions de petites annonces et autant d'occasions de se faire plaisir</h2>
+
+      <form onSubmit={applyFilters} className="bg-white p-4 rounded-xl shadow-sm mb-8 flex flex-wrap gap-4 items-end">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
+          <input 
+            type="text" 
+            placeholder="Que cherchez-vous ?" 
+            value={titleFilter} 
+            onChange={e => setTitleFilter(e.target.value)} 
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-lbc-orange" 
+          />
+        </div>
+        <div className="w-24">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Prix min (€)</label>
+          <input 
+            type="number" 
+            min="0"
+            value={minPrice} 
+            onChange={e => setMinPrice(e.target.value)} 
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-lbc-orange" 
+          />
+        </div>
+        <div className="w-24">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Prix max (€)</label>
+          <input 
+            type="number" 
+            min="0"
+            value={maxPrice} 
+            onChange={e => setMaxPrice(e.target.value)} 
+            className="w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:border-lbc-orange" 
+          />
+        </div>
+        <div className="w-48">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Trier par</label>
+          <select 
+            value={`${sortBy}-${sortOrder}`} 
+            onChange={e => {
+              const [by, order] = e.target.value.split('-');
+              setSortBy(by);
+              setSortOrder(order);
+            }} 
+            className="w-full border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:border-lbc-orange"
+          >
+            <option value="-desc">Pertinence</option>
+            <option value="price-asc">Prix croissant</option>
+            <option value="price-desc">Prix décroissant</option>
+            <option value="date-desc">Plus récent</option>
+            <option value="date-asc">Plus ancien</option>
+          </select>
+        </div>
+        
+        <div className="flex gap-2 h-[42px]">
+          <button 
+            type="button" 
+            onClick={resetFilters}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-bold py-2 px-4 rounded-lg transition-colors"
+          >
+            Réinitialiser
+          </button>
+          <button 
+            type="submit" 
+            className="bg-lbc-blue hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+          >
+            Rechercher
+          </button>
+        </div>
+      </form>
 
       {loading && (
         <div className="flex justify-center py-12">
@@ -105,7 +202,13 @@ export default function Home() {
       
       {error && <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-6">{error}</div>}
 
-      {!loading && !error && (
+      {!loading && !error && sales.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm">
+          <p className="text-gray-500 text-lg">Aucune annonce ne correspond à vos critères de recherche.</p>
+        </div>
+      )}
+
+      {!loading && !error && sales.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {sales.map((sale) => {
             const isFavorite = favorites.has(sale.id);

@@ -12,7 +12,7 @@ export const getNormMax = (val: number, min: number, max: number) => {
     return (max - val) / (max - min);
 };
 
-export const getNorm = (val: number, min: number, max: number) => {
+export const getNormMin = (val: number, min: number, max: number) => {
     if (max === min) return 0; 
     return (val - min) / (max - min);
 };
@@ -66,10 +66,10 @@ export const applyWeightedScores = (sales: Sale[], bounds: SalesBounds, ranges: 
 
 export const applyBarycenterScores = (sales: Sale[], bounds: any, barycenter: any) => {
     return sales.map(sale => {
-        const normPrice = getNorm(sale.price, bounds.minPrice, bounds.maxPrice);
-        const normQty = getNorm(sale.quantity, bounds.minQty, bounds.maxQty);
-        const normRating = getNorm(sale.seller_rating, bounds.minRating, bounds.maxRating);
-        const normWear = getNorm(sale.wear_level, bounds.minWear, bounds.maxWear);
+        const normPrice = getNormMax(sale.price, bounds.minPrice, bounds.maxPrice);
+        const normQty = getNormMax(sale.quantity, bounds.minQty, bounds.maxQty);
+        const normRating = getNormMax(sale.seller_rating, bounds.minRating, bounds.maxRating);
+        const normWear = getNormMax(sale.wear_level, bounds.minWear, bounds.maxWear);
 
         const distance = Math.sqrt(
             Math.pow(normPrice - barycenter.price, 2) +
